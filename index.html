@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sky Sports Streams - International Player</title>
+    <!-- Favicon KEKAL logo bulat kustom asal pilihan anda -->
+    <link rel="icon" type="image/png" href="https://pps.services.adobe.com/api/profile/D4121EA96512FA890A495E13@AdobeID/image/5e201058-d873-4236-9a59-ac4574a8dd78/276">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- HLS.js untuk mainkan m3u8 -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body {
+            background: radial-gradient(circle at top right, #111827, #070a12);
+        }
+        .list-card {
+            background: rgba(30, 41, 59, 0.25);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.2s ease-in-out;
+        }
+        .list-card:hover {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #070a12; }
+        ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #dc2626; }
+    </style>
+</head>
+<body class="text-gray-200 font-sans min-h-screen pb-10 selection:bg-red-500 selection:text-white">
+
+    <!-- Header (Mengikut rujukan imej image_45b23a.png) -->
+    <header class="max-w-6xl mx-auto px-4 py-5 flex justify-between items-center border-b border-gray-800/60 mb-6">
+        <div class="flex items-center gap-3.5">
+            <!-- Logo rasmi dalam website -->
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Sky_Sport_-_Logo_2026.svg/960px-Sky_Sport_-_Logo_2026.svg.png" 
+                 alt="Sky Sport" class="h-6 object-contain opacity-95">
+            <!-- Nama Website Baru -->
+            <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent border-l border-gray-700 pl-3.5">Streams</span>
+        </div>
+        <div class="text-xs text-gray-500 font-mono tracking-wider uppercase flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> International Feed
+        </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <main class="max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- PEMAIN VIDEO & BEZEL INFO -->
+        <div class="lg:col-span-2 space-y-3">
+            <div class="p-2 bg-gradient-to-b from-gray-800 to-gray-950 rounded-xl shadow-2xl border border-gray-800/80">
+                <div class="bg-black rounded-lg overflow-hidden aspect-video relative">
+                    <video id="video-player" class="w-full h-full object-contain" controls autoplay playsinline></video>
+                    
+                    <!-- Placeholder Skrin -->
+                    <div id="player-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-950 text-center z-10">
+                        <i class="fa-solid fa-circle-play text-4xl text-gray-700 mb-2 animate-pulse"></i>
+                        <p class="text-sm font-medium text-gray-400">Select a channel from the directory</p>
+                    </div>
+                </div>
+
+                <!-- BEZEL STRIM BAWAH -->
+                <div class="mt-2 px-3 py-2 bg-gray-900/90 rounded-md flex justify-between items-center gap-3 border border-gray-800" id="bezel-info">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-2 h-2 rounded-full bg-gray-600" id="live-indicator"></div>
+                        <span id="current-title" class="text-xs font-medium tracking-wide text-gray-500">No Stream Active</span>
+                    </div>
+                    <!-- Badges Spefifikasi Bezel -->
+                    <div class="flex items-center gap-1.5 text-[10px] font-bold tracking-wider">
+                        <span id="current-quality" class="px-2 py-0.5 bg-gray-800 text-gray-400 rounded border border-gray-700/50">--</span>
+                        <span id="current-fps" class="px-2 py-0.5 bg-gray-800 text-gray-400 rounded border border-gray-700/50">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SENARAI SALURAN -->
+        <div class="space-y-2.5">
+            <h3 class="text-[10px] uppercase font-bold tracking-widest text-gray-500 px-1">
+                <i class="fa-solid fa-globe text-red-500 mr-1"></i> Channel Directory
+            </h3>
+            
+            <!-- Susunan Melintang Menurun Ke Bawah -->
+            <div class="space-y-2 max-h-[460px] overflow-y-auto pr-1" id="channels-list">
+                <!-- Senarai dijanakan oleh JavaScript -->
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const streams = [
+            { 
+                title: "Sky Sports F1 HD (1)", 
+                logo: "https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1306.png",
+                url: "http://stream.bottledesk.net/p/AwZGQwwEZA/index.m3u8?token=c1lhdWg1N0lxNldaaE12ZnJ0MkRsY1NtcVoyQnk2eUYzWXVkbUthcHhxekRxNEduaVp1UnBxU2VlWmF0ZnRlRGxaMm0wNStDbnJOOXJJM0puSytpbkE9PQ==", 
+                fps: "25 FPS", quality: "HD" 
+            },
+            { 
+                title: "Sky Sports F1 HD (2)", 
+                logo: "https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1306.png",
+                url: "http://stream.bottledesk.net/p/AwZGQwwEZA/tracks-v1a1/mono.m3u8?token=c1lhdWg1N0lxNldaaE12ZnJ0MkRsY1NtcVoyQnk2eUYzWXVkbUthcHhxekRxNEduaVp1UnBxU2VlWmF0ZnRlRGxaMm0wNStDbnJOOXJJM0puSytpbkE9PQ==", 
+                fps: "25 FPS", quality: "HD" 
+            },
+            { 
+                title: "Sky Sports F1 HD (3)", 
+                logo: "https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1306.png",
+                url: "https://view-1.niewiemy.xyz/strimcdn/1782514520/lp/tv/sky_sport_f1_uk/hls/index.m3u8?jwt=MjAwMTplNjg6NTQ4MzpmNmM0OmIxMGY6NWM0ZDphOWVmOjQzYWZ8MTc4MjU1NzcyMHwvc3RyaW1jZG4vbHAvdHYvc2t5X3Nwb3J0X2YxX3VrL2hscy9pbmRleC5tM3U4fDFmdDViZDRTTXVUVTVMZnB6U3dwTldrT2JNY0VFQU4wVEtocDcydHdraEU", 
+                fps: "50 FPS", quality: "HD" 
+            },
+            { 
+                title: "Sky Sports F1 HD (4)", 
+                logo: "https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1306.png",
+                url: "https://view-1.niewiemy.xyz/strimcdn/1782514521/lp/tv/sky_sport_f1_uk/hls/tracks-v1a1/mono.m3u8?jwt=MjAwMTplNjg6NTQ4MzpmNmM0OmIxMGY6NWM0ZDphOWVmOjQzYWZ8MTc4MjU1NzcyMHwvc3RyaW1jZG4vbHAvdHYvc2t5X3Nwb3J0X2YxX3VrL2hscy9pbmRleC5tM3U4fDFmdDViZDRTTXVUVTVMZnB6U3dwTldrT2JNY0VFQU4wVEtocDcydHdraEU", 
+                fps: "50 FPS", quality: "HD" 
+            },
+            { 
+                title: "Sky Sports PL HD (1)", 
+                logo: "https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1303.png",
+                url: "http://stream.bottledesk.net/p/AAxBRQEBc2c/index.m3u8?token=cm4rdGlKbkpxcVdhZlpuYXJxKzN4NWZYcU1aOXlOeCtxYlNjeDZ5bG1vUERxNEduaVp1UnBxU2VlWmF0ZnRlRGxaMm0wNStDbnJOOXJJM0puSytpbkE9PQ==", 
+                fps: "50 FPS", quality: "HD" 
+            },
+            { 
+                title: "Sky Sports PL HD (2)", 
+                logo: "https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1303.png",
+                url: "http://stream.bottledesk.net/p/AAxBRQEBc2c/index.m3u8?token=cm4rdGlKbkpxcVdhZlpuYXJxKzN4NWZYcU1aOXlOeCtxYlNjeDZ5bG1vUERxNEduaVp1UnBxU2VlWmF0ZnRlRGxaMm0wNStDbnJOOXJJM0puSytpbkE9PQ==", 
+                fps: "50 FPS", quality: "HD" 
+            },
+            { 
+                title: "Sky Sports Cricket SD (1)", 
+                logo: "https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1302.png",
+                url: "http://stream.bottledesk.net/p/AgZMQQEAZA/index.m3u8?token=M1lTcXRjZVhyS2FhZ2NtdnNOeUV5Y2picXN1d25kMkNxNGFZbU52VGxYL0RxNEduaVp1UnBxU2VlWmF0ZnRlRGxaMm0wNStDbnJOOXJJM0puSytpbkE9PQ==", 
+                fps: "25 FPS", quality: "SD" 
+            },
+            { 
+                title: "Sky Sports Cricket SD (2)", 
+                logo: "https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1302.png",
+                url: "http://stream.bottledesk.net/p/AgZMQQEAZA/tracks-v1a1/mono.m3u8?token=M1lTcXRjZVhyS2FhZ2NtdnNOeUV5Y2picXN1d25kMkNxNGFZbU52VGxYL0RxNEduaVp1UnBxU2VlWmF0ZnRlRGxaMm0wNStDbnJOOXJJM0puSytpbkE9PQ==", 
+                fps: "25 FPS", quality: "SD" 
+            },
+            { 
+                title: "Sky Sports Golf HD (1)", 
+                logo: "https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1322.png",
+                url: "http://stream.bottledesk.net/p/BgJNQQUCfWc/index.m3u8?token=MjRTeGlKNmFydGFiZTV6ZGc2MjNtOGVtMXBxdG1MR0ZzSXpIeHEycnlxL0RxNEduaVp1UnBxU2VlWmF0ZnRlRGxaMm0wNStDbnJOOXJJM0puSytpbkE9PQ==", 
+                fps: "25 FPS", quality: "HD" 
+            },
+            { 
+                title: "Sky Sports Golf HD (2)", 
+                logo: "https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1322.png",
+                url: "http://stream.bottledesk.net/p/BgJNQQUCfWc/tracks-v1a1/mono.m3u8?token=MjRTeGlKNmFydGFiZTV6ZGc2MjNtOGVtMXBxdG1MR0ZzSXpIeHEycnlxL0RxNEduaVp1UnBxU2VlWmF0ZnRlRGxaMm0wNStDbnJOOXJJM0puSytpbkE9PQ==", 
+                fps: "25 FPS", quality: "HD" 
+            },
+            { 
+                title: "Sky Sports Racing HD (1)", 
+                logo: "https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1354.png",
+                url: "http://sewv654wfcsdwfi87fwvgbngh.siauliairsavlt.pw/iptv/KE3KFU2M4B95FE/7341/index.m3u8", 
+                fps: "50 FPS", quality: "HD" 
+            }
+        ];
+
+        const listContainer = document.getElementById('channels-list');
+        const video = document.getElementById('video-player');
+        const placeholder = document.getElementById('player-placeholder');
+        
+        const infoTitle = document.getElementById('current-title');
+        const infoQuality = document.getElementById('current-quality');
+        const infoFps = document.getElementById('current-fps');
+        const liveIndicator = document.getElementById('live-indicator');
+        
+        let hls = null;
+
+        streams.forEach((stream, index) => {
+            const row = document.createElement('div');
+            row.className = "list-card rounded-lg p-2 flex items-center justify-between cursor-pointer border border-gray-800/40";
+            row.onclick = () => playLiveStream(stream, row);
+
+            row.innerHTML = `
+                <div class="flex items-center gap-2.5">
+                    <img src="${stream.logo}" alt="${stream.title}" class="h-7 w-7 object-contain drop-shadow">
+                    <span class="text-xs font-semibold text-gray-300 tracking-wide">${stream.title}</span>
+                </div>
+                <div class="flex items-center gap-1.5 text-[9px] font-mono font-bold text-gray-500">
+                    <span class="px-1.5 py-0.5 bg-gray-900/60 rounded border border-gray-800">${stream.quality}</span>
+                    <span class="px-1.5 py-0.5 bg-gray-900/60 rounded border border-gray-800">${stream.fps}</span>
+                </div>
+            `;
+            listContainer.appendChild(row);
+        });
+
+        function playLiveStream(stream, element) {
+            placeholder.classList.add('hidden');
+
+            infoTitle.innerText = `Live: ${stream.title}`;
+            infoTitle.className = "text-xs font-semibold text-white tracking-wide";
+            
+            infoQuality.innerText = stream.quality;
+            infoQuality.className = `px-2 py-0.5 rounded border font-mono ${stream.quality === 'HD' ? 'bg-red-950/80 text-red-400 border-red-900' : 'bg-slate-800 text-slate-400 border-slate-700'}`;
+            
+            infoFps.innerText = stream.fps;
+            infoFps.className = "px-2 py-0.5 bg-gray-800 text-gray-300 rounded border border-gray-700 font-mono";
+
+            liveIndicator.className = "w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444] animate-pulse";
+
+            document.querySelectorAll('#channels-list > div').forEach(c => c.classList.remove('border-red-500/60', 'bg-red-950/10'));
+            element.classList.add('border-red-500/60', 'bg-red-950/10');
+
+            if (hls) { hls.destroy(); }
+
+            if (Hls.isSupported()) {
+                hls = new Hls();
+                hls.loadSource(stream.url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+            } 
+            else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = stream.url;
+                video.addEventListener('loadedmetadata', () => video.play());
+            }
+        }
+    </script>
+</body>
+</html>
